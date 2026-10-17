@@ -1,0 +1,573 @@
+--[[
+    NAMO_V6 Mobile Script for Delta Executor (Speed/Jump Reset & Thin Toggle Font)
+    Key: KEY_GOD_XD_V6
+--]]
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- เคลียร์ GUI เก่าทั้งหมดป้องกันการรันซ้ำ
+pcall(function()
+    if PlayerGui:FindFirstChild("NAMO_V6_Main") then PlayerGui.NAMO_V6_Main:Destroy() end
+    if PlayerGui:FindFirstChild("NAMO_V6_KeySystem") then PlayerGui.NAMO_V6_KeySystem:Destroy() end
+end)
+
+local IMAGE_ASSET_ID = "rbxassetid://1000020792"
+local CorrectKey = "KEY_GOD_XD_V6"
+local BinaryLink = "01001011 01000101 01011001 01011111 01000111 01001111 01000100 01011111 01011000 01000100 01011111 01010110 00110110"
+
+-- ==========================================
+-- 🔑 หน้าต่างคีย์ (Key System Window)
+-- ==========================================
+local KeyGui = Instance.new("ScreenGui")
+KeyGui.Name = "NAMO_V6_KeySystem"
+KeyGui.ResetOnSpawn = false
+KeyGui.Parent = PlayerGui
+
+local KeyFrame = Instance.new("Frame")
+KeyFrame.Size = UDim2.new(0, 360, 0, 240)
+KeyFrame.Position = UDim2.new(0.5, -180, 0.5, -120)
+KeyFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+KeyFrame.BorderSizePixel = 0
+KeyFrame.Active = true
+KeyFrame.Draggable = true
+KeyFrame.Parent = KeyGui
+
+local KeyCorner = Instance.new("UICorner")
+KeyCorner.CornerRadius = UDim.new(0, 10)
+KeyCorner.Parent = KeyFrame
+
+local KeyStroke = Instance.new("UIStroke")
+KeyStroke.Color = Color3.fromRGB(255, 0, 50)
+KeyStroke.Thickness = 2
+KeyStroke.Parent = KeyFrame
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, 0, 0, 40)
+TitleLabel.Position = UDim2.new(0, 0, 0.05, 0)
+TitleLabel.Text = "NAMO V6 | KEY SYSTEM"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 16
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Parent = KeyFrame
+
+local KeyInput = Instance.new("TextBox")
+KeyInput.Size = UDim2.new(0.85, 0, 0, 38)
+KeyInput.Position = UDim2.new(0.075, 0, 0.38, 0)
+KeyInput.PlaceholderText = "ใส่คีย์ตรงนี้..."
+KeyInput.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)
+KeyInput.Text = ""
+KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyInput.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+KeyInput.Font = Enum.Font.SourceSans
+KeyInput.TextSize = 14
+KeyInput.Parent = KeyFrame
+
+local InputCorner = Instance.new("UICorner")
+InputCorner.CornerRadius = UDim.new(0, 6)
+InputCorner.Parent = KeyInput
+
+local VerifyBtn = Instance.new("TextButton")
+VerifyBtn.Size = UDim2.new(0, 120, 0, 38)
+VerifyBtn.Position = UDim2.new(0.075, 0, 0.68, 0)
+VerifyBtn.Text = "ยืนยันคีย์"
+VerifyBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+VerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+VerifyBtn.Font = Enum.Font.SourceSansBold
+VerifyBtn.TextSize = 14
+VerifyBtn.Parent = KeyFrame
+
+local VerifyCorner = Instance.new("UICorner")
+VerifyCorner.CornerRadius = UDim.new(0, 6)
+VerifyCorner.Parent = VerifyBtn
+
+local CopyLinkBtn = Instance.new("TextButton")
+CopyLinkBtn.Size = UDim2.new(0, 150, 0, 38)
+CopyLinkBtn.Position = UDim2.new(0.5, 0, 0.68, 0)
+CopyLinkBtn.Text = "คัดลอกลิ้งหาคีย์"
+CopyLinkBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+CopyLinkBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+CopyLinkBtn.Font = Enum.Font.SourceSans
+CopyLinkBtn.TextSize = 14
+CopyLinkBtn.Parent = KeyFrame
+
+local CopyCorner = Instance.new("UICorner")
+CopyCorner.CornerRadius = UDim.new(0, 6)
+CopyCorner.Parent = CopyLinkBtn
+
+CopyLinkBtn.MouseButton1Click:Connect(function()
+    pcall(function() setclipboard(BinaryLink) end)
+    CopyLinkBtn.Text = "คัดลอกแล้ว!"
+    task.wait(2)
+    CopyLinkBtn.Text = "คัดลอกลิ้งหาคีย์"
+end)
+
+-- ==========================================
+-- 🖥️ หน้าต่าง UI หลัก ( Main UI )
+-- ==========================================
+local MainGui = Instance.new("ScreenGui")
+MainGui.Name = "NAMO_V6_Main"
+MainGui.ResetOnSpawn = false
+MainGui.Enabled = false
+MainGui.Parent = PlayerGui
+
+-- ปุ่มเปิดปิด UI (V6) ปรับฟอนต์ให้ผอมลง ไม่หนาจนทับกัน
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
+ToggleBtn.Position = UDim2.new(0.02, 0, 0.2, 0)
+ToggleBtn.Text = "V 6"
+ToggleBtn.TextSize = 14
+ToggleBtn.Font = Enum.Font.SourceSans -- ฟอนต์ปกติ ตัวอักษรผอมลงสวยงาม
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+ToggleBtn.Active = true
+ToggleBtn.Draggable = true
+ToggleBtn.Parent = MainGui
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 12)
+ToggleCorner.Parent = ToggleBtn
+
+local ToggleStroke = Instance.new("UIStroke")
+ToggleStroke.Color = Color3.fromRGB(255, 255, 255)
+ToggleStroke.Thickness = 1.5
+ToggleStroke.Parent = ToggleBtn
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 480, 0, 320)
+MainFrame.Position = UDim2.new(0.5, -240, 0.5, -160)
+MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = MainGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 10)
+MainCorner.Parent = MainFrame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(255, 255, 255)
+MainStroke.Thickness = 1.5
+MainStroke.Parent = MainFrame
+
+local HeaderLabel = Instance.new("TextLabel")
+HeaderLabel.Size = UDim2.new(1, -65, 0, 30)
+HeaderLabel.Position = UDim2.new(0, 65, 0, 5)
+HeaderLabel.Text = "NAMO V6 MOBILE DELTA ROBOT"
+HeaderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+HeaderLabel.Font = Enum.Font.SourceSansBold
+HeaderLabel.TextSize = 14
+HeaderLabel.TextXAlignment = Enum.TextXAlignment.Left
+HeaderLabel.BackgroundTransparency = 1
+HeaderLabel.ZIndex = 5
+HeaderLabel.Parent = MainFrame
+
+local Sidebar = Instance.new("Frame")
+Sidebar.Size = UDim2.new(0, 55, 1, -35)
+Sidebar.Position = UDim2.new(0, 0, 0, 35)
+Sidebar.BackgroundColor3 = Color3.fromRGB(12, 12, 15)
+Sidebar.BackgroundTransparency = 0.5
+Sidebar.ZIndex = 5
+Sidebar.Parent = MainFrame
+
+local SideLayout = Instance.new("UIListLayout")
+SideLayout.Padding = UDim.new(0, 8)
+SideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+SideLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+SideLayout.Parent = Sidebar
+
+local SidePadding = Instance.new("UIPadding")
+SidePadding.PaddingTop = UDim.new(0, 8)
+SidePadding.Parent = Sidebar
+
+local TabContainer = Instance.new("Frame")
+TabContainer.Size = UDim2.new(1, -65, 1, -40)
+TabContainer.Position = UDim2.new(0, 60, 0, 35)
+TabContainer.BackgroundTransparency = 1
+TabContainer.ZIndex = 2
+TabContainer.Parent = MainFrame
+
+local Tabs = {
+    Move = Instance.new("ScrollingFrame"),
+    Combat = Instance.new("ScrollingFrame"),
+    Visual = Instance.new("ScrollingFrame"),
+    Misc = Instance.new("ScrollingFrame")
+}
+
+for name, frame in pairs(Tabs) do
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundTransparency = 1
+    frame.Visible = false
+    frame.ScrollBarThickness = 3
+    frame.ZIndex = 3
+    frame.Parent = TabContainer
+    
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 8)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Parent = frame
+end
+
+Tabs.Move.Visible = true
+
+local function createTabButton(text, order, targetTab)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 40, 0, 40)
+    btn.Text = text
+    btn.TextSize = 20
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.LayoutOrder = order
+    btn.ZIndex = 6
+    btn.Parent = Sidebar
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 8)
+    c.Parent = btn
+    
+    btn.MouseButton1Click:Connect(function()
+        for _, t in pairs(Tabs) do t.Visible = false end
+        targetTab.Visible = true
+    end)
+end
+
+createTabButton("📁", 1, Tabs.Move)
+createTabButton("⚔️", 2, Tabs.Combat)
+createTabButton("👁️", 3, Tabs.Visual)
+createTabButton("⚙️", 4, Tabs.Misc)
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+VerifyBtn.MouseButton1Click:Connect(function()
+    if string.gsub(KeyInput.Text, "%s+", "") == CorrectKey then
+        KeyGui:Destroy()
+        MainGui.Enabled = true
+    else
+        KeyInput.Text = ""
+        KeyInput.PlaceholderText = "คีย์ผิด! ลองใหม่..."
+    end
+end)
+
+-- UI Builders Helper
+local function createToggle(parent, text, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.96, 0, 0, 38)
+    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    frame.BorderSizePixel = 0
+    frame.ZIndex = 4
+    frame.Parent = parent
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 6)
+    c.Parent = frame
+    
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(0.7, 0, 1, 0)
+    lbl.Position = UDim2.new(0.04, 0, 0, 0)
+    lbl.Text = text
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.BackgroundTransparency = 1
+    lbl.Font = Enum.Font.SourceSans
+    lbl.TextSize = 13
+    lbl.ZIndex = 5
+    lbl.Parent = frame
+    
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 50, 0, 24)
+    btn.Position = UDim2.new(0.78, 0, 0.18, 0)
+    btn.Text = "OFF"
+    btn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 12
+    btn.ZIndex = 5
+    btn.Parent = frame
+    
+    local btnC = Instance.new("UICorner")
+    btnC.CornerRadius = UDim.new(0, 4)
+    btnC.Parent = btn
+    
+    local state = false
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        btn.Text = state and "ON" or "OFF"
+        btn.BackgroundColor3 = state and Color3.fromRGB(0, 160, 0) or Color3.fromRGB(180, 0, 0)
+        pcall(function() callback(state) end)
+    end)
+end
+
+local function createSlider(parent, text, min, max, default, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.96, 0, 0, 45)
+    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    frame.BorderSizePixel = 0
+    frame.ZIndex = 4
+    frame.Parent = parent
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 6)
+    c.Parent = frame
+    
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -10, 0, 20)
+    lbl.Position = UDim2.new(0, 8, 0, 2)
+    lbl.Text = text .. " : " .. tostring(default)
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.BackgroundTransparency = 1
+    lbl.Font = Enum.Font.SourceSans
+    lbl.TextSize = 12
+    lbl.ZIndex = 5
+    lbl.Parent = frame
+    
+    local sliderBg = Instance.new("Frame")
+    sliderBg.Size = UDim2.new(0.92, 0, 0, 6)
+    sliderBg.Position = UDim2.new(0.04, 0, 0.68, 0)
+    sliderBg.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+    sliderBg.BorderSizePixel = 0
+    sliderBg.ZIndex = 5
+    sliderBg.Parent = frame
+    
+    local sliderFill = Instance.new("Frame")
+    sliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+    sliderFill.BackgroundColor3 = Color3.fromRGB(255, 0, 50)
+    sliderFill.BorderSizePixel = 0
+    sliderFill.ZIndex = 6
+    sliderFill.Parent = sliderBg
+    
+    local dragging = false
+    local function update(input)
+        local pos = math.clamp((input.Position.X - sliderBg.AbsolutePosition.X) / sliderBg.AbsoluteSize.X, 0, 1)
+        sliderFill.Size = UDim2.new(pos, 0, 1, 0)
+        local val = math.floor(min + (max - min) * pos)
+        lbl.Text = text .. " : " .. tostring(val)
+        pcall(function() callback(val) end)
+    end
+    
+    sliderBg.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            update(input)
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            update(input)
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+end
+
+-- ==========================================
+-- 📁 หมวดหมู่ที่ 1: การเคลื่อนที่ (Movement & Fly Fix)
+-- ==========================================
+local FlySpeed = 50
+local Flying = false
+
+createToggle(Tabs.Move, "บิน (Fly)", function(state)
+    Flying = state
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = char.HumanoidRootPart
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    
+    if Flying then
+        local bv = Instance.new("BodyVelocity")
+        bv.Name = "NAMO_FlyVel"
+        bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+        bv.Velocity = Vector3.zero
+        bv.Parent = hrp
+        
+        local bg = Instance.new("BodyGyro")
+        bg.Name = "NAMO_FlyGyro"
+        bg.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+        bg.CFrame = hrp.CFrame
+        bg.Parent = hrp
+        
+        if hum then hum.PlatformStand = true end
+        
+        task.spawn(function()
+            while Flying and hrp and hrp.Parent do
+                task.wait()
+                if hum then
+                    local moveDir = hum.MoveDirection
+                    if moveDir.Magnitude > 0 then
+                        local camCF = Camera.CFrame
+                        local camSpaceDir = camCF:VectorToObjectSpace(moveDir)
+                        local flyVector = (camCF.LookVector * -camSpaceDir.Z) + (camCF.RightVector * camSpaceDir.X)
+                        bv.Velocity = flyVector.Unit * FlySpeed
+                    else
+                        bv.Velocity = Vector3.zero
+                    end
+                    bg.CFrame = Camera.CFrame
+                end
+            end
+            if bv then bv:Destroy() end
+            if bg then bg:Destroy() end
+            if hum then hum.PlatformStand = false end
+        end)
+    else
+        if hrp:FindFirstChild("NAMO_FlyVel") then hrp.NAMO_FlyVel:Destroy() end
+        if hrp:FindFirstChild("NAMO_FlyGyro") then hrp.NAMO_FlyGyro:Destroy() end
+        if hum then hum.PlatformStand = false end
+    end
+end)
+createSlider(Tabs.Move, "ความเร็วบิน", 1, 500, 50, function(v) FlySpeed = v end)
+
+-- วิ่งเร็ว (Speed) พร้อมระบบรีเซ็ตค่าเมื่อปิด
+local WalkSpeedVal = 16
+local SpeedEnabled = false
+createToggle(Tabs.Move, "วิ่งเร็ว (Speed)", function(state)
+    SpeedEnabled = state
+    if not state and LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum.WalkSpeed = 16 end
+    end
+end)
+createSlider(Tabs.Move, "ความเร็ววิ่งเร็ว", 1, 500, 16, function(v) WalkSpeedVal = v end)
+
+-- กระโดดสูง (Jump) พร้อมระบบรีเซ็ตค่าเมื่อปิด
+local JumpPowerVal = 50
+local JumpEnabled = false
+createToggle(Tabs.Move, "กระโดดสูง (Jump)", function(state)
+    JumpEnabled = state
+    if not state and LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then 
+            hum.UseJumpPower = true
+            hum.JumpPower = 50 
+        end
+    end
+end)
+createSlider(Tabs.Move, "ความสูงกระโดดสูง", 1, 500, 50, function(v) JumpPowerVal = v end)
+
+local InfJump = false
+createToggle(Tabs.Move, "กระโดดไม่จำกัด (Inf Jump)", function(state) InfJump = state end)
+UserInputService.JumpRequest:Connect(function()
+    if InfJump and LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+    end
+end)
+
+local AirWalk = false
+local AirPart = nil
+createToggle(Tabs.Move, "เดินบนอากาศ (Air Walk)", function(state)
+    AirWalk = state
+    if not AirWalk and AirPart then AirPart:Destroy() AirPart = nil end
+end)
+
+local NoclipEnabled = false
+createToggle(Tabs.Move, "เดินทะลุ (Noclip)", function(state) NoclipEnabled = state end)
+
+task.spawn(function()
+    while true do
+        task.wait()
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                
+                if hum and SpeedEnabled then hum.WalkSpeed = WalkSpeedVal end
+                if hum and JumpEnabled then 
+                    hum.UseJumpPower = true
+                    hum.JumpPower = JumpPowerVal 
+                end
+                
+                if NoclipEnabled then
+                    for _, v in pairs(char:GetDescendants()) do
+                        if v:IsA("BasePart") then v.CanCollide = false end
+                    end
+                end
+                
+                if AirWalk and hrp then
+                    if not AirPart or not AirPart.Parent then
+                        AirPart = Instance.new("Part")
+                        AirPart.Name = "NAMO_AirBlock"
+                        AirPart.Size = Vector3.new(6, 1, 6)
+                        AirPart.Anchored = true
+                        AirPart.Transparency = 1
+                        AirPart.Parent = Workspace
+                    end
+                    AirPart.CFrame = CFrame.new(hrp.Position.X, hrp.Position.Y - 3.5, hrp.Position.Z)
+                elseif not AirWalk and AirPart then
+                    AirPart:Destroy()
+                    AirPart = nil
+                end
+            end
+        end)
+    end
+end)
+
+-- ==========================================
+-- ⚔️ หมวดหมู่ที่ 2: ต่อสู้ (Combat)
+-- ==========================================
+local AimbotEnabled = false
+local SelectedAimTarget = "อัตโนมัติ (ใกล้ที่สุด)"
+local AimSmoothness = 5
+
+local function GetClosestPlayer()
+    local closest, minDst = nil, math.huge
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChildOfClass("Humanoid") and plr.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
+            local dst = (plr.Character.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+            if dst < minDst then
+                minDst = dst
+                closest = plr
+            end
+        end
+    end
+    return closest
+end
+
+createToggle(Tabs.Combat, "อิมล็อก (Aimbot)", function(state) AimbotEnabled = state end)
+
+local AimDropBtn = Instance.new("TextButton")
+AimDropBtn.Size = UDim2.new(0.96, 0, 0, 35)
+AimDropBtn.Text = "เป้าหมาย: อัตโนมัติ (ใกล้ที่สุด)"
+AimDropBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+AimDropBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AimDropBtn.Font = Enum.Font.SourceSansBold
+AimDropBtn.TextSize = 12
+AimDropBtn.ZIndex = 5
+AimDropBtn.Parent = Tabs.Combat
+
+local AimDropC = Instance.new("UICorner")
+AimDropC.CornerRadius = UDim.new(0, 5)
+AimDropC.Parent = AimDropBtn
+
+AimDropBtn.MouseButton1Click:Connect(function()
+    local playerList = {"อัตโนมัติ (ใกล้ที่สุด)"}
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then table.insert(playerList, p.Name) end
+    end
+    local currentIndex = 1
+    for i, name in ipairs(playerList) do
+        if name == SelectedAimTarget then currentIndex = i break end
+    end
+    SelectedAimTarget = playerList[(currentIndex % #playerList) + 1]
+    AimDropBtn.Text = "เป้าหมาย: " .. SelectedAimTarget
+end)
+
+createSlider(Tabs.Combat, "ความแรงการล็อก", 1, 10, 5, function(v) AimSmoothness = v end)
+
+task.spawn(function()
+    while true do
+    
